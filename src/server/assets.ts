@@ -2,7 +2,7 @@ import { count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { assets, users } from "@/db/schema";
 import { assetSchema, assetUpdateSchema } from "@/validators";
-import { parseOrThrow } from "@/lib/api-error";
+import { ApiError, parseOrThrow } from "@/lib/api-error";
 import type { SessionUser } from "@/server/auth";
 import { assertPermission, notFound } from "@/server/guard";
 import { logActivity } from "@/server/activity";
@@ -87,7 +87,13 @@ export async function getAsset(id: number) {
 export async function createAsset(user: SessionUser, input: unknown) {
   assertPermission(user, "create", "asset");
   const data = parseOrThrow(assetSchema, input);
-  const key = await nextKey("AST", assets);
+
+  if (data.ownerId) {
+    const [o] = await db.select({ id: users.id }).from(users).where(eq(users.id, data.ownerId)).limit(1);
+    if (!o) throw new ApiError(422, "INVALID_OWNER", "That owner no longer exists. Choose another.");
+  }
+
+  const key = await nextKey("AST", assets, assets.key);
   const [created] = await db
     .insert(assets)
     .values({

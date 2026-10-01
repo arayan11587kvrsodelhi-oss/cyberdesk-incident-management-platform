@@ -174,6 +174,7 @@ export function IncidentDetail({
           {incident.title}
         </h1>
         <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
+          <Meta label="Assigned analyst" value={incident.assigneeName ?? "Unassigned"} />
           <Meta label="Created" value={fmtDateTime(incident.createdAt)} />
           <Meta label="Updated" value={fmtRelative(incident.updatedAt)} />
           <Meta label="Record id" value={`#${incident.id}`} />

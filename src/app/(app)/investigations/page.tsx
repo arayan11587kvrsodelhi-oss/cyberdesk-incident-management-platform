@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link2, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { PageHeader, Panel } from "@/components/ui/panel";
@@ -234,12 +235,12 @@ export default function InvestigationsPage() {
                       <p className="mt-2.5 max-w-[86ch] whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--muted)]">
                         {text}
                       </p>
-                      <a
+                      <Link
                         href={`/incidents/${row.incidentId}`}
                         className="mono mt-2.5 inline-flex items-center gap-1.5 text-[11px] text-[var(--accent-2)] underline-offset-4 hover:underline"
                       >
                         <Link2 size={11} /> {row.incidentTitle.slice(0, 70)}
-                      </a>
+                      </Link>
                     </article>
                   </li>
                 );

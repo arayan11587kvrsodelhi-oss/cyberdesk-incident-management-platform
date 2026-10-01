@@ -1,5 +1,5 @@
 import { count, desc, eq, inArray, sql } from "drizzle-orm";
-import type { AnyPgTable } from "drizzle-orm/pg-core";
+import type { AnyPgColumn, AnyPgTable } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { assets, incidentAssets, incidents, users } from "@/db/schema";
 import { incidentSchema, incidentUpdateSchema } from "@/validators";
@@ -19,9 +19,15 @@ export type IncidentFilters = {
   sort?: "created" | "updated" | "severity";
 };
 
-/** Human-readable, monotonically growing record key: INC-0007, ALT-0031 … */
-export async function nextKey(prefix: string, table: AnyPgTable) {
-  const [row] = await db.select({ n: count() }).from(table);
+/** Human-readable, monotonically growing record key: INC-0007, ALT-0031 …
+ *  Derived from the highest existing numeric suffix, not the row count — so
+ *  deleting a middle record can never cause a key collision (unique violation). */
+export async function nextKey(prefix: string, table: AnyPgTable, keyCol: AnyPgColumn) {
+  const [row] = await db
+    .select({
+      n: sql<number>`coalesce(max(nullif(split_part(${keyCol}, '-', 2), '')::integer), 0)`,
+    })
+    .from(table);
   const n = (row?.n ?? 0) + 1;
   return `${prefix}-${String(n).padStart(4, "0")}`;
 }
@@ -142,7 +148,12 @@ export async function createIncident(user: SessionUser, input: unknown) {
   assertPermission(user, "create", "incident");
   const data = parseOrThrow(incidentSchema, input);
 
-  const key = await nextKey("INC", incidents);
+  if (data.assigneeId) {
+    const [a] = await db.select({ id: users.id }).from(users).where(eq(users.id, data.assigneeId)).limit(1);
+    if (!a) throw new ApiError(422, "INVALID_ASSIGNEE", "That analyst no longer exists. Choose another.");
+  }
+
+  const key = await nextKey("INC", incidents, incidents.key);
   const [created] = await db
     .insert(incidents)
     .values({
@@ -204,11 +215,12 @@ export async function updateIncident(user: SessionUser, id: number, input: unkno
   if (data.assigneeId !== undefined) {
     const next = data.assigneeId ?? null;
     if (next !== before.assigneeId) {
-      patch.assigneeId = next;
       if (next) {
         const [assignee] = await db.select({ name: users.name }).from(users).where(eq(users.id, next)).limit(1);
-        changes.push(`assigned to ${assignee?.name ?? "analyst"}`);
+        if (!assignee) throw new ApiError(422, "INVALID_ASSIGNEE", "That analyst no longer exists. Choose another.");
+        changes.push(`assigned to ${assignee.name}`);
       } else changes.push("unassigned");
+      patch.assigneeId = next;
     }
   }
   if (data.title !== undefined) patch.title = data.title;

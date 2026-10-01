@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
 import { HardDrive, Pencil, Plus, Trash2 } from "lucide-react";
 import { PageHeader, Panel } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ type Row = {
   environment: string;
   status: string;
   lastSeen: string | null;
+  ownerId: number | null;
   ownerName: string | null;
 };
 
@@ -58,7 +60,16 @@ function useDebounced(value: string, delay = 300) {
 }
 
 export default function AssetsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AssetsPageInner />
+    </Suspense>
+  );
+}
+
+function AssetsPageInner() {
   const toast = useToast();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const debounced = useDebounced(search);
   const { data, loading, error, params, setParam, setPage, reset, reload, activeFilterCount } = useList<Row>(
@@ -71,6 +82,33 @@ export default function AssetsPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Deep link: /assets?edit=<id> opens the edit dialog for that record directly.
+  const editParam = Number(searchParams.get("edit") ?? "0") || 0;
+  useEffect(() => {
+    if (!editParam) return;
+    let cancelled = false;
+    api<{ asset: Row }>(`/api/assets/${editParam}`)
+      .then((res) => {
+        if (cancelled) return;
+        const a = res.asset;
+        setDraft({
+          id: a.id,
+          key: a.key,
+          name: a.name,
+          type: a.type,
+          ipAddress: a.ipAddress ?? "",
+          environment: a.environment,
+          status: a.status,
+          ownerId: a.ownerId ?? null,
+        });
+        setFormOpen(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [editParam]);
 
   useEffect(() => setParam("q", debounced), [debounced, setParam]);
 
@@ -253,10 +291,10 @@ export default function AssetsPage() {
                                 name: row.name,
                                 type: row.type,
                                 ipAddress: row.ipAddress ?? "",
-                                environment: row.environment,
-                                status: row.status,
-                                ownerId: null,
-                              });
+                                  environment: row.environment,
+                                  status: row.status,
+                                  ownerId: row.ownerId,
+                                });
                               setFormOpen(true);
                             }}
                             className="rounded-[3px] p-1.5 text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--text)]"

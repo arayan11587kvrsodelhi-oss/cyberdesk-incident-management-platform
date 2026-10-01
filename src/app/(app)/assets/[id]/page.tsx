@@ -88,9 +88,9 @@ export default async function AssetDetailPage({ params }: Props) {
         description={`${asset.type.replace("_", " ")} · ${asset.environment}${asset.ipAddress ? ` · ${asset.ipAddress}` : ""}`}
         actions={
           can(user.role, "update", "asset") ? (
-            <Link href="/assets">
+            <Link href={`/assets?edit=${asset.id}`}>
               <Button variant="outline" size="sm">
-                <Pencil size={13} /> Edit in inventory
+                <Pencil size={13} /> Edit asset
               </Button>
             </Link>
           ) : (

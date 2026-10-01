@@ -2,7 +2,7 @@ import { count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { incidents, tasks, users } from "@/db/schema";
 import { taskSchema, taskUpdateSchema } from "@/validators";
-import { parseOrThrow } from "@/lib/api-error";
+import { ApiError, parseOrThrow } from "@/lib/api-error";
 import type { SessionUser } from "@/server/auth";
 import { assertPermission, notFound } from "@/server/guard";
 import { logActivity } from "@/server/activity";
@@ -103,7 +103,12 @@ export async function createTask(user: SessionUser, input: unknown) {
     .limit(1);
   if (!incident) throw notFound("incident");
 
-  const key = await nextKey("TSK", tasks);
+  if (data.assigneeId) {
+    const [a] = await db.select({ id: users.id }).from(users).where(eq(users.id, data.assigneeId)).limit(1);
+    if (!a) throw new ApiError(422, "INVALID_ASSIGNEE", "That analyst no longer exists. Choose another.");
+  }
+
+  const key = await nextKey("TSK", tasks, tasks.key);
   const [created] = await db
     .insert(tasks)
     .values({
@@ -139,8 +144,20 @@ export async function updateTask(user: SessionUser, id: number, input: unknown) 
   const changes: string[] = [];
   if (data.title !== undefined) patch.title = data.title;
   if (data.description !== undefined) patch.description = data.description;
-  if (data.incidentId !== undefined) patch.incidentId = data.incidentId;
-  if (data.assigneeId !== undefined) patch.assigneeId = data.assigneeId ?? null;
+  if (data.incidentId !== undefined && data.incidentId !== before.incidentId) {
+    const [inc] = await db.select({ id: incidents.id }).from(incidents).where(eq(incidents.id, data.incidentId)).limit(1);
+    if (!inc) throw new ApiError(422, "INVALID_INCIDENT", "That incident no longer exists. Link the task to another.");
+    patch.incidentId = data.incidentId;
+    changes.push("incident link changed");
+  }
+  if (data.assigneeId !== undefined) {
+    const next = data.assigneeId ?? null;
+    if (next) {
+      const [u] = await db.select({ id: users.id }).from(users).where(eq(users.id, next)).limit(1);
+      if (!u) throw new ApiError(422, "INVALID_ASSIGNEE", "That analyst no longer exists. Choose another.");
+    }
+    patch.assigneeId = next;
+  }
   if (data.priority !== undefined && data.priority !== before.priority) {
     patch.priority = data.priority;
     changes.push(`priority → ${data.priority.toLowerCase()}`);

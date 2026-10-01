@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Bell, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { PageHeader, Panel } from "@/components/ui/panel";
@@ -87,16 +88,9 @@ export default function AlertsPage() {
   }, []);
   useEffect(loadOptions, [loadOptions]);
 
-  /** Optimistic acknowledgement — rolls back and explains on failure. */
+  /** Acknowledge: server-verified PATCH, then refresh from the source of truth. */
   async function acknowledge(row: Row) {
-    const snapshot = data;
     setAckInFlight(row.id);
-    if (data) {
-      const rows = data.rows.map((r) => (r.id === row.id ? { ...r, status: "ACKNOWLEDGED" } : r));
-      // optimistic render via local state is handled by reload; patch immediately
-      void rows;
-      void snapshot;
-    }
     try {
       await api(`/api/alerts/${row.id}`, { method: "PATCH", body: { status: "ACKNOWLEDGED" } });
       toast.success(`${row.key} acknowledged`, "Recorded in the activity log.");
@@ -274,13 +268,13 @@ export default function AlertsPage() {
                     </Td>
                     <Td className="max-w-[200px]">
                       {row.incidentId ? (
-                        <a
+                        <Link
                           href={`/incidents/${row.incidentId}`}
                           className="mono block truncate text-[11.5px] text-[var(--accent-2)] underline-offset-4 hover:underline"
                           title={row.incidentTitle ?? ""}
                         >
                           {row.incidentKey}
-                        </a>
+                        </Link>
                       ) : (
                         <span className="text-[var(--muted-2)]">unlinked</span>
                       )}

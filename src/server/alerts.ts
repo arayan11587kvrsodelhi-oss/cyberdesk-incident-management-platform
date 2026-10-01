@@ -2,6 +2,7 @@ import { count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { alerts, incidents, users } from "@/db/schema";
 import { alertSchema, alertUpdateSchema } from "@/validators";
+import { ApiError } from "@/lib/api-error";
 import { parseOrThrow } from "@/lib/api-error";
 import type { SessionUser } from "@/server/auth";
 import { assertPermission, notFound } from "@/server/guard";
@@ -70,7 +71,7 @@ export async function getAlert(id: number) {
 export async function createAlert(user: SessionUser, input: unknown) {
   assertPermission(user, "create", "alert");
   const data = parseOrThrow(alertSchema, input);
-  const key = await nextKey("ALT", alerts);
+  const key = await nextKey("ALT", alerts, alerts.key);
   const [created] = await db
     .insert(alerts)
     .values({
@@ -116,7 +117,16 @@ export async function updateAlert(user: SessionUser, id: number, input: unknown)
     changes.push(`status → ${data.status.toLowerCase()}`);
   }
   if (data.detectedAt !== undefined) patch.detectedAt = data.detectedAt;
-  if (data.incidentId !== undefined) patch.incidentId = data.incidentId ?? null;
+  if (data.incidentId !== undefined && data.incidentId !== before.incidentId) {
+    const target = data.incidentId;
+    if (target) {
+      const [inc] = await db.select({ id: incidents.id }).from(incidents).where(eq(incidents.id, target)).limit(1);
+      if (!inc) throw new ApiError(422, "INVALID_INCIDENT", "That incident no longer exists. Link to another.");
+      patch.incidentId = target;
+    } else {
+      patch.incidentId = null;
+    }
+  }
 
   const [updated] = await db.update(alerts).set(patch).where(eq(alerts.id, id)).returning();
   if (!updated) throw notFound("alert");

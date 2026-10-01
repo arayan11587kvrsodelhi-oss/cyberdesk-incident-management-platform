@@ -309,9 +309,19 @@ export default function TasksPage() {
                         )}
                       </Td>
                       <Td className="mono whitespace-nowrap text-[11.5px]">
-                        <span style={{ color: overdue ? "var(--crit)" : "var(--muted)" }}>
-                          {row.dueDate ?? "—"}
-                        </span>
+                        {row.dueDate ? (
+                          overdue ? (
+                            <span className="inline-flex items-center gap-1" style={{ color: "var(--crit)" }}>
+                              {row.dueDate}
+                              <span className="sr-only">(overdue)</span>
+                              <span aria-hidden className="font-semibold">!</span>
+                            </span>
+                          ) : (
+                            <span style={{ color: "var(--muted)" }}>{row.dueDate}</span>
+                          )
+                        ) : (
+                          <span className="text-[var(--muted-2)]">—</span>
+                        )}
                       </Td>
                       <Td>
                         <div className="flex items-center justify-end gap-1">
@@ -415,13 +425,13 @@ function PaginationInline({
   const pages = Math.max(1, Math.ceil(total / pageSize));
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)}>
+      <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Previous page">
         Prev
       </Button>
       <span className="mono text-[11px] text-[var(--muted)]">
         {page} / {pages}
       </span>
-      <Button size="sm" variant="ghost" disabled={page >= pages} onClick={() => onPage(page + 1)}>
+      <Button size="sm" variant="ghost" disabled={page >= pages} onClick={() => onPage(page + 1)} aria-label="Next page">
         Next
       </Button>
     </div>
