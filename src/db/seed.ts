@@ -419,8 +419,8 @@ CYBERDESK seed complete — ALL DATA IS FICTIONAL / SIMULATED.
   tasks                ${insertedTasks.length}
   activity logs        ${logs.length}
 
-Demo sign-in (fictional, demo-only): ${TEAM[0].email} / ${DEMO_PASSWORD}
-Other seeded accounts share the same password and use the emails above.
+Demo sign-in (fictional, demo-only): ${TEAM[0].email}
+Other seeded accounts share the same demo-only password and use the emails above.
 `);
   void byEmail;
   process.exit(0);
@@ -430,3 +430,4 @@ main().catch((err) => {
   console.error("Seed failed:", err instanceof Error ? err.message : err);
   process.exit(1);
 });
+
