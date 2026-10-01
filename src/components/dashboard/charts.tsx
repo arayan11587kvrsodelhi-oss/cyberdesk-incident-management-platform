@@ -7,8 +7,8 @@ const TONE_HEX: Record<string, string> = {
   high: "#f97316",
   medium: "#f59e0b",
   low: "#38bdf8",
-  info: "#38bdf8",
-  positive: "#22c55e",
+  info: "#35b5e0",
+  positive: "#34d399",
   warn: "#f59e0b",
   neutral: "#6a717b",
 };
@@ -135,7 +135,15 @@ export function AlertActivityChart({ series }: { series: { day: string; n: numbe
 
 export function StackedStatus({ rows }: { rows: { key: string; n: number }[] }) {
   const total = rows.reduce((s, r) => s + r.n, 0);
-  if (total === 0) return <p className="text-[12.5px] text-[var(--muted)]">No incidents recorded yet.</p>;
+  if (total === 0)
+    return (
+      <div className="flex flex-col items-center gap-1.5 py-5 text-center">
+        <p className="text-[12.5px] text-[var(--muted)]">No incident status data</p>
+        <p className="text-[11.5px] text-[var(--muted-2)]">
+          The lifecycle breakdown will appear once incidents are recorded.
+        </p>
+      </div>
+    );
   return (
     <div>
       <div className="flex h-3 w-full overflow-hidden rounded-[2px]" role="img" aria-label="Incident status breakdown">

@@ -323,7 +323,7 @@ export function IncidentDetail({
                           background: t.status === "DONE" ? "var(--accent)" : "transparent",
                         }}
                       >
-                        {t.status === "DONE" ? <Check size={11} color="#04140A" strokeWidth={3} /> : null}
+                        {t.status === "DONE" ? <Check size={11} color="#04191b" strokeWidth={3} /> : null}
                       </button>
                     ) : (
                       <span className="mt-1 h-4 w-4 shrink-0 rounded-[3px] border border-[var(--border)]" aria-hidden />

@@ -9,8 +9,8 @@ const TONE: Record<Tone, { fg: string; bg: string; bar?: string }> = {
   medium: { fg: "#f59e0b", bg: "color-mix(in oklab, #f59e0b 14%, transparent)" },
   low: { fg: "#38bdf8", bg: "color-mix(in oklab, #38bdf8 14%, transparent)" },
   neutral: { fg: "var(--muted)", bg: "color-mix(in oklab, var(--text) 7%, transparent)" },
-  info: { fg: "#38bdf8", bg: "color-mix(in oklab, #38bdf8 14%, transparent)" },
-  positive: { fg: "#22c55e", bg: "color-mix(in oklab, #22c55e 14%, transparent)" },
+  info: { fg: "#35b5e0", bg: "color-mix(in oklab, #35b5e0 14%, transparent)" },
+  positive: { fg: "#34d399", bg: "color-mix(in oklab, #34d399 14%, transparent)" },
   warn: { fg: "#f59e0b", bg: "color-mix(in oklab, #f59e0b 14%, transparent)" },
 };
 

@@ -4,6 +4,8 @@ import { ArrowDownRight, ArrowUpRight, Activity, Inbox, ShieldAlert, Radio, List
 import { getCurrentUser } from "@/server/auth";
 import { getDashboardStats } from "@/server/dashboard";
 import { Panel } from "@/components/ui/panel";
+import { NewIncidentButton } from "@/components/dashboard/new-incident-button";
+import { can, type Role } from "@/lib/permissions";
 import {
   AlertActivityChart,
   BarBreakdown,
@@ -71,9 +73,15 @@ export default async function DashboardPage() {
   const [user, stats] = await Promise.all([getCurrentUser(), getDashboardStats()]);
   const firstName = user?.name.trim().split(/\s+/)[0] ?? "there";
   const { kpis } = stats;
+  const canCreate = user ? can(user.role as Role, "create", "incident") : false;
 
   return (
     <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="mono text-[10px] tracking-[0.22em] text-[var(--muted-2)] uppercase">CYBERDESK · Security Operations</p>
+        <NewIncidentButton canCreate={canCreate} />
+      </div>
+
       <header className="border-b border-[var(--border)] pb-5">
         <p className="label text-[var(--accent)]">Security operations overview</p>
         <h1 className="mt-2 text-[30px] leading-[1.08] font-semibold tracking-[-0.03em] sm:text-[38px]">
@@ -132,7 +140,7 @@ export default async function DashboardPage() {
               toneFor={(k) => (SEVERITY_TONE[k] as Tone) ?? "neutral"}
               total={kpis.totalIncidents}
               href={{ label: "Open incident ledger", href: "/incidents" }}
-              emptyHint="No open incidents — nothing has been recorded in the demo estate yet."
+              emptyHint="No incident severity data — severity distribution will appear when incidents are recorded."
             />
           </div>
         </Panel>
@@ -153,7 +161,10 @@ export default async function DashboardPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-[12.5px] text-[var(--muted)]">No incidents are currently assigned.</p>
+                <div className="flex flex-col items-center gap-1.5 py-4 text-center">
+                  <p className="text-[12.5px] text-[var(--muted)]">No assigned incidents</p>
+                  <p className="text-[11.5px] text-[var(--muted-2)]">Assigned incident workload will appear here.</p>
+                </div>
               )}
             </div>
           </div>
@@ -217,7 +228,10 @@ export default async function DashboardPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-[12.5px] text-[var(--muted)]">No activity recorded yet.</p>
+              <div className="flex flex-col items-center gap-1.5 py-4 text-center">
+                <p className="text-[12.5px] text-[var(--muted)]">No activity recorded yet</p>
+                <p className="text-[11.5px] text-[var(--muted-2)]">Workspace events will appear here as they happen.</p>
+              </div>
             )}
             <div className="mt-3 flex flex-wrap gap-3">
               <Link href="/incidents" className="mono text-[11px] text-[var(--accent-2)] underline-offset-4 hover:underline">

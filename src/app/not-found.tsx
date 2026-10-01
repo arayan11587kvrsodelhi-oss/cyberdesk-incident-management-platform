@@ -12,7 +12,7 @@ export default function NotFound() {
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Link
           href="/dashboard"
-          className="h-9 rounded-[4px] bg-[var(--accent)] px-4 text-[13px] font-semibold text-[#04140A] transition-[filter] hover:brightness-110"
+          className="h-9 rounded-[4px] bg-[var(--accent)] px-4 text-[13px] font-semibold text-[#04191b] transition-[filter] hover:brightness-110"
         >
           Back to overview
         </Link>

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import { Mark, Wordmark } from "@/components/brand/mark";
-import { NAV, WORKSPACE } from "@/components/shell/nav";
+import { NAV_GROUPS, WORKSPACE } from "@/components/shell/nav";
 import { ThemeToggle, useTheme } from "@/components/shell/theme-toggle";
 import { ROLE_LABEL, type Role } from "@/lib/permissions";
 import { cn, initials } from "@/lib/utils";
@@ -16,38 +16,51 @@ export type Viewer = { id: number; name: string; email: string; role: Role };
 function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Primary" className="flex flex-col gap-0.5">
-      {NAV.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            title={collapsed ? item.label : undefined}
-            className={cn(
-              "group relative flex h-9 items-center gap-3 rounded-[4px] px-2.5 text-[13px] transition-colors duration-150",
-              active
-                ? "bg-[var(--hover)] text-[var(--text)]"
-                : "text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--text)]",
-            )}
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full transition-opacity duration-150",
-                active ? "opacity-100" : "opacity-0",
-              )}
-              style={{ background: "var(--accent)" }}
-            />
-            <Icon size={15} className="shrink-0" />
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-            {collapsed ? <span className="sr-only">{item.label}</span> : null}
-          </Link>
-        );
-      })}
+    <nav aria-label="Primary" className="flex flex-col">
+      {NAV_GROUPS.map((group, gi) => (
+        <div key={group.label} className={cn(gi > 0 && "mt-5")}>
+          {!collapsed ? (
+            <p className="label mb-1.5 px-2.5 text-[9px] text-[var(--muted-2)]" aria-hidden>
+              {group.label}
+            </p>
+          ) : (
+            <hr className="mb-2 border-[var(--border)]" aria-hidden />
+          )}
+          <div className="flex flex-col gap-0.5">
+            {group.items.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "group relative flex h-9 items-center gap-3 rounded-[4px] px-2.5 text-[13px] transition-colors duration-150",
+                    active
+                      ? "bg-[var(--hover)] text-[var(--text)]"
+                      : "text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--text)]",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full transition-opacity duration-150",
+                      active ? "opacity-100" : "opacity-0",
+                    )}
+                    style={{ background: "var(--accent)" }}
+                  />
+                  <Icon size={15} className="shrink-0" />
+                  {!collapsed ? <span className="truncate">{item.label}</span> : null}
+                  {collapsed ? <span className="sr-only">{item.label}</span> : null}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }
