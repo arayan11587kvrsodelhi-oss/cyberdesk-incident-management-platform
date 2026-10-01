@@ -25,5 +25,5 @@ export async function POST(req: Request) {
     if (!ctx) throw new ApiError(401, "UNAUTHORIZED", "Please sign in to continue.");
     const asset = await createAsset(ctx.user, await req.json());
     return { asset };
-  }, 201);
+  }, 201, req);
 }

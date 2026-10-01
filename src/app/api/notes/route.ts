@@ -24,5 +24,5 @@ export async function POST(req: Request) {
     if (!ctx) throw new ApiError(401, "UNAUTHORIZED", "Please sign in to continue.");
     const note = await createNote(ctx.user, await req.json());
     return { note };
-  }, 201);
+  }, 201, req);
 }

@@ -27,5 +27,5 @@ export async function POST(req: Request) {
     if (!ctx) throw new ApiError(401, "UNAUTHORIZED", "Please sign in to continue.");
     const task = await createTask(ctx.user, await req.json());
     return { task };
-  }, 201);
+  }, 201, req);
 }

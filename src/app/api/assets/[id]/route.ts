@@ -20,13 +20,13 @@ export async function PATCH(req: Request, { params }: Params) {
     if (!ctx) throw new ApiError(401, "UNAUTHORIZED", "Please sign in to continue.");
     const asset = await updateAsset(ctx.user, requirePositiveId((await params).id), await req.json());
     return { asset };
-  });
+  }, 200, req);
 }
 
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(req: Request, { params }: Params) {
   return handle(async () => {
     const ctx = await getSession();
     if (!ctx) throw new ApiError(401, "UNAUTHORIZED", "Please sign in to continue.");
     return deleteAsset(ctx.user, requirePositiveId((await params).id));
-  });
+  }, 200, req);
 }

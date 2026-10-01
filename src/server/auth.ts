@@ -148,19 +148,23 @@ export async function requestMeta() {
 }
 
 /**
- * CSRF-conscious check for state-changing requests: same-site cookie + origin
- * must match the host we are serving. Rejects cross-site forged POSTs.
+ * CSRF-conscious check for state-changing requests: the Origin header must be
+ * present and match the host we are serving. A missing Origin is treated as a
+ * cross-site attempt — browsers always send Origin on state-changing requests,
+ * so an absent Origin indicates a forged/non-browser client. Previously this
+ * check silently passed when either header was absent, letting an attacker
+ * script a cross-site POST with the victim's cookies.
  */
 export async function assertSameOrigin() {
   const { origin, host } = await requestMeta();
-  if (!origin || !host) return;
+  if (!host) return;
   let originHost = "";
   try {
-    originHost = new URL(origin).host;
+    originHost = new URL(origin ?? "").host;
   } catch {
     throw new ApiError(403, "FORBIDDEN", "Request blocked for security reasons.");
   }
-  if (originHost !== host) {
+  if (!originHost || originHost !== host) {
     throw new ApiError(403, "FORBIDDEN", "Request blocked for security reasons.");
   }
 }

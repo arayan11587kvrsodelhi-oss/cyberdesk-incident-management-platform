@@ -13,7 +13,7 @@ export async function PATCH(req: Request, { params }: Params) {
     assertPermission(user, "update", "user");
     const id = requirePositiveId((await params).id);
     return { member: await updateTeamMember(user, id, await req.json()) };
-  });
+  }, 200, req);
 }
 
 export async function GET(_req: Request, { params }: Params) {

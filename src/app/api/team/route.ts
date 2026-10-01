@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const user = await requireUser();
     const member = await createTeamMember(user, await req.json());
     return { member };
-  }, 201);
+  }, 201, req);
 }
 
 /** Deactivation shortcut: PATCH is the primary path, DELETE removes the account. */
@@ -37,5 +37,5 @@ export async function DELETE(req: Request) {
       summary: `${user.name} deactivated a workspace account`,
     });
     return { member: updated };
-  });
+  }, 200, req);
 }
