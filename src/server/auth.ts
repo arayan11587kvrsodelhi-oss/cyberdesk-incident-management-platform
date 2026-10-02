@@ -9,6 +9,8 @@ import { ApiError } from "@/lib/api-error";
 import type { Role } from "@/lib/permissions";
 
 export const SESSION_COOKIE = "cd_session";
+/** Server-side absolute expiry. `sessions.expiresAt` is enforced on every lookup,
+ *  so a copied cookie cannot outlive its row even if the client ignores `expires`. */
 const SESSION_DAYS = 7;
 
 export type SessionUser = {
@@ -43,11 +45,17 @@ export async function startSession(user: { id: number }, ua?: string | null, ip?
   }).returning({ id: sessions.id });
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
+    // Unreadable from JavaScript: blocks exfiltration via XSS.
     httpOnly: true,
+    // "lax" still blocks cross-site POST from carrying the cookie (defence in
+    // depth behind assertSameOrigin) while allowing normal top-level navigation.
     sameSite: "lax",
+    // Never sent over plaintext HTTP in production.
     secure: process.env.NODE_ENV === "production",
     path: "/",
     expires: expiresAt,
+    // Belt-and-braces: also expire out of the bfcache.
+    priority: "high",
   });
 
   return created.id;
